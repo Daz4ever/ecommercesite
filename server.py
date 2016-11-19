@@ -51,28 +51,23 @@ def login():
     password = data['password']
     customer = data['username']
 
-    encrypted_password = db.query('select password, id from customer where customer.username=$1', customer).dictresult()
-    encrypted_passwordx = encrypted_password[0]['password']
-    myid = encrypted_password[0]['id']
+    encrypted_password = db.query('select password, username, first_name, last_name, email, id from customer where customer.username=$1', customer).dictresult()[0]
+    encrypted_passwordx = encrypted_password['password']
+    myid = encrypted_password['id']
     rehash = bcrypt.hashpw(password.encode('utf-8'), encrypted_passwordx)
     if rehash == encrypted_passwordx:
         token = uuid.uuid4()
         tokenUpdate = db.insert('auth_token', customer_id=myid, token=token)
 
-
-        result = db.query('select * from customer inner join auth_token on auth_token.customer_id = customer.id').dictresult()[0]
-        print "Hello:"
-        print result['username']
-        print  result
         userInfo = {
         'user': {
-        'username': result['username'],
-        'email': result['email'],
-        'first name': result['first_name'],
-        'last name': result['last_name']
+        'username': encrypted_password['username'],
+        'email': encrypted_password['email'],
+        'first name': encrypted_password['first_name'],
+        'last name': encrypted_password['last_name']
 
         },
-        'auth_token': result['token']
+        'auth_token': tokenUpdate
         }
         print 'Login success!'
     else:
